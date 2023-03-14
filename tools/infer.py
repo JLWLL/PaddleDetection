@@ -153,7 +153,6 @@ def get_test_images(infer_dir, infer_img):
 
     assert len(images) > 0, "no image found in {}".format(infer_dir)
     logger.info("Found {} inference images in total.".format(len(images)))
-
     return images
 
 
@@ -198,9 +197,9 @@ def pre_trainer(FLAGS, cfg):
     return trainer, FLAGS
 
 
-def do_work(trainer, FLAGS):
-    r, d = '',''
-    images = get_test_images(FLAGS.infer_dir, FLAGS.infer_img)
+def do_work(trainer, FLAGS, image):
+    # images = get_test_images(FLAGS.infer_dir, FLAGS.infer_img)
+    images = [image]
     if FLAGS.slice_infer:
         r, d = trainer.slice_predict(
             images,
@@ -243,21 +242,11 @@ def main():
     # disable mlu in config by default
     if 'use_mlu' not in cfg:
         cfg.use_mlu = False
-
-    if cfg.use_gpu:
-        place = paddle.set_device('gpu')
-    elif cfg.use_npu:
-        place = paddle.set_device('npu')
-    elif cfg.use_xpu:
-        place = paddle.set_device('xpu')
-    elif cfg.use_mlu:
-        place = paddle.set_device('mlu')
-    else:
-        place = paddle.set_device('cpu')
+    paddle.set_device('cpu')
 
     if FLAGS.slim_config:
         cfg = build_slim_model(cfg, FLAGS.slim_config, mode='test')
-
+    cfg.use_gpu = False
     check_config(cfg)
     check_gpu(cfg.use_gpu)
     check_npu(cfg.use_npu)
