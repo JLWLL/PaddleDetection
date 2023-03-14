@@ -53,6 +53,10 @@ from .export_utils import _dump_infer_config, _prune_input_spec, apply_to_static
 from paddle.distributed.fleet.utils.hybrid_parallel_util import fused_allreduce_gradients
 
 from ppdet.utils.logger import setup_logger
+
+from collections import Counter
+
+
 logger = setup_logger('ppdet.engine')
 
 __all__ = ['Trainer']
@@ -773,7 +777,8 @@ class Trainer(object):
                       visualize=True):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-
+        save_name = ''
+        result_for_pic = 'None. Done.'
         self.dataset.set_slice_images(images, slice_size, overlap_ratio)
         loader = create('TestReader')(self.dataset, 0)
         imid2path = self.dataset.get_imid2path()
@@ -904,6 +909,20 @@ class Trainer(object):
                     image = visualize_results(
                         image, bbox_res, mask_res, segm_res, keypoint_res,
                         pose3d_res, int(im_id), catid2name, draw_threshold)
+                    names = []
+                    result_for_pic = ''
+                    for one in bbox_res:
+                        if one['score'] > draw_threshold:
+                            names.append(catid2name[one['category_id']])
+                    names_dict = Counter(names)
+                    for k, v in names_dict.items():
+                        if v > 1:
+                            result_for_pic += str(v) + ' ' + k + 's, '
+                        else:
+                            result_for_pic += str(v) + ' ' + k + ', '
+                    if result_for_pic == '':
+                        result_for_pic = 'None. '
+                    result_for_pic += 'Done.'
                     self.status['result_image'] = np.array(image.copy())
                     if self._compose_callback:
                         self._compose_callback.on_step_end(self.status)
@@ -915,6 +934,7 @@ class Trainer(object):
                     image.save(save_name, quality=95)
 
                     start = end
+        return result_for_pic, save_name
 
     def predict(self,
                 images,
@@ -924,7 +944,7 @@ class Trainer(object):
                 visualize=True):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-
+        result_for_pic = 'None'
         self.dataset.set_images(images)
         loader = create('TestReader')(self.dataset, 0)
 
@@ -1032,6 +1052,21 @@ class Trainer(object):
                     image = visualize_results(
                         image, bbox_res, mask_res, segm_res, keypoint_res,
                         pose3d_res, int(im_id), catid2name, draw_threshold)
+                    names = []
+                    result_for_pic = ''
+                    for one in bbox_res:
+                        if one['score'] > draw_threshold:
+                            names.append(catid2name[one['category_id']])
+                    names_dict = Counter(names)
+                    for k, v in names_dict.items():
+                        if v > 1:
+                            result_for_pic += str(v) + ' ' + k + 's, '
+                        else:
+                            result_for_pic += str(v) + ' ' + k + ', '
+                    if result_for_pic == '':
+                        result_for_pic = 'None. '
+                    result_for_pic += 'Done.'
+                    print(result_for_pic)
                     self.status['result_image'] = np.array(image.copy())
                     if self._compose_callback:
                         self._compose_callback.on_step_end(self.status)
@@ -1043,7 +1078,7 @@ class Trainer(object):
                     image.save(save_name, quality=95)
 
                     start = end
-        return results
+        return result_for_pic, save_name
 
     def _get_save_image_name(self, output_dir, image_path):
         """

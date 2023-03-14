@@ -199,9 +199,10 @@ def pre_trainer(FLAGS, cfg):
 
 
 def do_work(trainer, FLAGS):
+    r, d = '',''
     images = get_test_images(FLAGS.infer_dir, FLAGS.infer_img)
     if FLAGS.slice_infer:
-        trainer.slice_predict(
+        r, d = trainer.slice_predict(
             images,
             slice_size=FLAGS.slice_size,
             overlap_ratio=FLAGS.overlap_ratio,
@@ -213,12 +214,13 @@ def do_work(trainer, FLAGS):
             save_results=FLAGS.save_results,
             visualize=FLAGS.visualize)
     else:
-        trainer.predict(
+        r, d = trainer.predict(
             images,
             draw_threshold=FLAGS.draw_threshold,
             output_dir=FLAGS.output_dir,
             save_results=FLAGS.save_results,
             visualize=FLAGS.visualize)
+    return r, d
 
 
 def main():
