@@ -8,11 +8,11 @@ shapely
 scipy
 terminaltables
 Cython
-#pycocotools
+pycocotools
 setuptools
 
 # for MOT evaluation and inference
-#lap
+lap
 motmetrics
 sklearn==0.0
 
